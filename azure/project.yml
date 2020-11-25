@@ -1,0 +1,4 @@
+variables:
+  service_name: async-slowapp
+  service_base_path: async-slowapp
+  short_service_name: async-slowapp

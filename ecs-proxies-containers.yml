@@ -1,0 +1,6 @@
+
+docker_containers:
+
+  - name: async-slowapp
+    dockerfile: "docker/async-slowapp/Dockerfile"
+    path: "docker/async-slowapp"

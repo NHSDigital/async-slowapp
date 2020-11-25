@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ProxyEndpoint name="default">
+    <PreFlow name="PreFlow"/>
+    <Flows>
+        <Flow name="AddPayloadToPing">
+            <Description />
+            <Request />
+            <Response>
+                <Step>
+                    <Name>AssignMessage.AddPayloadToPing</Name>
+                </Step>
+            </Response>
+            <Condition>(proxy.pathsuffix MatchesPath "/_ping") and ((request.verb = "GET") or (request.verb = "HEAD"))</Condition>
+        </Flow>
+    </Flows>
+    <PostFlow name="PostFlow"/>
+    <PostClientFlow name="PostClientFlow">
+        <Response>
+            <Step>
+                <Name>FlowCallout.LogToSplunk</Name>
+            </Step>
+        </Response>
+    </PostClientFlow>
+    <HTTPProxyConnection>
+        <BasePath>{{ SERVICE_BASE_PATH }}</BasePath>
+        <VirtualHost>secure</VirtualHost>
+    </HTTPProxyConnection>
+    <RouteRule name="NoRoutePing">
+        <Condition>(proxy.pathsuffix MatchesPath "/_ping") and ((request.verb = "GET") or (request.verb = "HEAD"))</Condition>
+    </RouteRule>
+    <RouteRule name="apim">
+        <TargetEndpoint>apim</TargetEndpoint>
+    </RouteRule>
+    <DefaultFaultRule>
+        <Step>
+            <Name>AssignMessage.CatchallErrorMessage</Name>
+        </Step>
+    </DefaultFaultRule>
+</ProxyEndpoint>
