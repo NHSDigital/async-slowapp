@@ -49,3 +49,8 @@ utils/
 
 # tests
 reports/
+
+# python
+.venv/
+.pytest_cache/
+*.pyc
