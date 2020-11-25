@@ -35,7 +35,7 @@ describe("express with async-slowapp", function () {
     it("responds to /_ping", (done) => {
         request(server)
             .get("/_ping")
-            .expect(200, {ping: "pong"})
+            .expect(200, {ping: "pong", service: "async-slowapp"})
             .expect("Content-Type", /json/, done);
     });
 
@@ -130,7 +130,7 @@ describe("express with async-slowapp with /sub", function () {
     it("responds to /sub/_ping", (done) => {
         request(server)
             .get("/sub/_ping")
-            .expect(200, {ping: "pong"})
+            .expect(200, {ping: "pong", service: "async-slowapp"})
             .expect("Content-Type", /json/, done);
     });
 

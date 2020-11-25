@@ -233,7 +233,7 @@ function respond(req, res, status, headers=undefined) {
     res.end()
 }
 
-async function ping(req, res) { res.json({ping: "pong"}); }
+async function ping(req, res) { res.json({ping: "pong", service: "async-slowapp"}); }
 
 async function slow(req, res) {
 

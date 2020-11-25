@@ -21,10 +21,12 @@ function start(options) {
 
 const handlers = require("./handlers");
 app.get("/_ping", handlers.ping);
+app.get("/_status", handlers.ping);
 app.get("/slow", handlers.slow);
 app.delete("/poll", handlers.delete_poll);
 app.get("/poll", handlers.poll);
 app.get("/sub/_ping", handlers.ping);
+app.get("/sub/_status", handlers.ping);
 app.get("/sub/slow", handlers.slow);
 app.delete("/sub/poll", handlers.delete_poll);
 app.get("/sub/poll", handlers.poll);
