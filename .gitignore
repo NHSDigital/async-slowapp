@@ -54,3 +54,5 @@ reports/
 .venv/
 .pytest_cache/
 *.pyc
+.coverage
+__pycache__/

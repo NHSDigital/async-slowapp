@@ -1,21 +1,15 @@
-import http.client
-from collections import defaultdict
-
-
-import aiohttp
 import pytest
-
-
-#
-# def test_postman_echo_basic_status():
-#
-#     conn = http.client.HTTPSConnection("postman-echo.com")
-#     conn.request("GET", "/status/408")
-#     resp = conn.getresponse()
-#
-#     assert resp.status == 408
-#
 from helpers import SessionClient
+
+
+@pytest.mark.asyncio
+async def test_api_status(api: SessionClient):
+
+    async with api.get("_status") as r:
+        assert r.status == 200
+        body = await r.json()
+
+        assert body == dict(ping='pong', service='async-slowapp')
 
 
 @pytest.mark.asyncio
@@ -44,13 +38,4 @@ async def test_app_ping(api: SessionClient):
 
         assert body == ''
 
-
-@pytest.mark.asyncio
-async def test_api_status(api: SessionClient):
-
-    async with api.get("_status") as r:
-        assert r.status == 200
-        body = await r.json()
-
-        assert body == dict(ping='pong', service='async-slowapp')
 
