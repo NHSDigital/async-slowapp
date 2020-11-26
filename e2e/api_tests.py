@@ -39,7 +39,6 @@ async def test_app_ping(api: SessionClient, test_config: TestSessionConfig):
         assert body["version"] == test_config.service_base_path
 
 
-@pytest.mark.skip('breaking test till shared flow implementation')
 @pytest.mark.asyncio
 async def test_api_status_with_service_header(api: SessionClient):
 
