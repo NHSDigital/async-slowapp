@@ -1,15 +1,5 @@
 import pytest
-from helpers import SessionClient
-
-
-@pytest.mark.asyncio
-async def test_api_status(api: SessionClient):
-
-    async with api.get("_status") as r:
-        assert r.status == 200
-        body = await r.json()
-
-        assert body == dict(ping='pong', service='async-slowapp')
+from helpers import SessionClient, TestSessionConfig
 
 
 @pytest.mark.asyncio
@@ -30,12 +20,31 @@ async def test_postman_echo_send_multivalue_headers():
 
 
 @pytest.mark.asyncio
-async def test_app_ping(api: SessionClient):
+async def test_api_status(api: SessionClient):
+
+    async with api.get("_status") as r:
+        assert r.status == 200
+        body = await r.json()
+
+        assert body == dict(ping='pong', service='async-slowapp')
+
+
+@pytest.mark.asyncio
+async def test_app_ping(api: SessionClient, test_config: TestSessionConfig):
 
     async with api.get("_ping") as r:
         assert r.status == 200
         body = await r.json()
 
-        assert body == ''
+        assert body["version"] == test_config.service_base_path
 
 
+@pytest.mark.skip('breaking test till shared flow implementation')
+@pytest.mark.asyncio
+async def test_api_status_with_service_header(api: SessionClient):
+
+    async with api.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
+        assert r.status == 200
+        body = await r.json()
+
+        assert body == dict(ping='pong', service='async-slowapp')

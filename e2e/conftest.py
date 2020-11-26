@@ -1,17 +1,17 @@
 import pytest
-import os
-from helpers import SessionClient
-from urllib.parse import urljoin
+from helpers import SessionClient, TestSessionConfig
+
+
+@pytest.fixture(scope='session')
+def test_config() -> TestSessionConfig:
+
+    return TestSessionConfig()
 
 
 @pytest.fixture(scope='function')
-async def api():
-    apis_base = 'api.service.nhs.uk'
-    apigee_env = os.environ.get('APIGEE_ENVIRONMENT', 'internal-dev')
-    host = apis_base if apigee_env == 'prod' else f'{apigee_env}.api.service.nhs.uk'
-    base_path = os.environ.get('SERVICE_BASE_PATH', 'async-slowapp')
+async def api(test_config: TestSessionConfig):
 
-    session_client = SessionClient(urljoin(f"https://{host}", base_path))
+    session_client = SessionClient(test_config.base_uri)
 
     yield session_client
 

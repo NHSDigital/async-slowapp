@@ -3,8 +3,31 @@ from typing import Optional, Type, Any
 
 import aiohttp
 from aiohttp.typedefs import StrOrURL
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import os
+
+from dataclasses import dataclass, field
+
+
+@dataclass(frozen=True)
+class TestSessionConfig:
+    api_environment: Optional[str] = field(default=None)
+    service_base_path: Optional[str] = field(default=None)
+    api_host: str = field(init=False)
+    base_uri: str = field(init=False)
+
+    def __post_init__(self):
+        if not self.api_environment:
+            object.__setattr__(self, "api_environment", os.environ.get('APIGEE_ENVIRONMENT', 'internal-dev'))
+
+        if not self.service_base_path:
+            object.__setattr__(self, "service_base_path", os.environ.get('SERVICE_BASE_PATH', 'async-slowapp-pr-1'))
+
+        apis_base = 'api.service.nhs.uk'
+        api_host = apis_base if self.api_environment == 'prod' else f'{self.api_environment}.{apis_base}'
+        base_uri = urljoin(f"https://{api_host}", self.service_base_path)
+        object.__setattr__(self, 'api_host', api_host)
+        object.__setattr__(self, 'base_uri', base_uri)
 
 
 class SessionClient:
