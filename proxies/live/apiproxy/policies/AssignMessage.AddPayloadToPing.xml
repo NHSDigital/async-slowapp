@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <AssignMessage continueOnError="false" enabled="true" name="AssignMessage.AddPayloadToPing" async="false">
   <Set>
+    <Headers><Header name="Content-Type">application/json</Header></Headers>
     <Payload>{"version":"{{ DEPLOYED_VERSION }}","revision":"{apiproxy.revision}","releaseId":"{{ RELEASE_RELEASEID }}","commitId":"{{ SOURCE_COMMIT_ID }}"}</Payload>
     <StatusCode>200</StatusCode>
     <Verb>GET</Verb>
