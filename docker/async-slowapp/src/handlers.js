@@ -258,7 +258,7 @@ async function slow(req, res) {
 
     locals.tracked[poll_id] = {finish_at: finish_at, final_status: parseInt(final_status)};
 
-    let location = `${locals.host}/poll?id=${poll_id}`;
+    let location = `${locals.base_uri}/poll?id=${poll_id}`;
 
     let headers = new MultiValueHeaders([
         "Content-Type", "application/json",
@@ -313,7 +313,7 @@ async function poll(req, res) {
     let tracking = locals.tracked[poll_id];
 
     if (new Date() < tracking.finish_at) {
-        respond(req, res, 202, new MultiValueHeaders(['Content-Location', `${locals.host}/poll?id=${poll_id}`]));
+        respond(req, res, 202, new MultiValueHeaders(['Content-Location', `${locals.base_uri}/poll?id=${poll_id}`]));
         return;
     }
 

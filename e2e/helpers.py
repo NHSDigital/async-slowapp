@@ -54,6 +54,18 @@ class SessionClient:
         uri = self._full_url(url)
         return self.session.get(uri, allow_redirects=allow_redirects, **kwargs)
 
+    def post(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any) -> "aoihttp._RequestContextManager":
+        uri = self._full_url(url)
+        return self.session.get(uri, allow_redirects=allow_redirects, **kwargs)
+
+    def put(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any) -> "aoihttp._RequestContextManager":
+        uri = self._full_url(url)
+        return self.session.get(uri, allow_redirects=allow_redirects, **kwargs)
+
+    def delete(self, url: StrOrURL, *, allow_redirects: bool = True, **kwargs: Any) -> "aoihttp._RequestContextManager":
+        uri = self._full_url(url)
+        return self.session.get(uri, allow_redirects=allow_redirects, **kwargs)
+
     async def close(self):
         await self.session.close()
         return self

@@ -47,3 +47,43 @@ async def test_api_status_with_service_header(api: SessionClient):
         body = await r.json()
 
         assert body == dict(ping='pong', service='async-slowapp')
+
+
+@pytest.mark.asyncio
+async def test_api_poll_with_missing_id(api: SessionClient):
+
+    async with api.get("poll?id=madeup") as r:
+        assert r.status == 404
+
+
+@pytest.mark.asyncio
+async def test_api_delete_poll_with_missing_id(api: SessionClient):
+
+    async with api.delete("poll?id=madeup") as r:
+        assert r.status == 404
+
+
+@pytest.mark.asyncio
+async def test_api_slow_supplies_content_location(api: SessionClient, test_config: TestSessionConfig):
+
+    async with api.get("slow") as r:
+        assert r.status == 202
+        assert r.headers.get('Content-Type') == 'application/json'
+        assert r.headers.get('Content-Location').startswith(test_config.base_uri + '/poll?')
+        assert r.cookies.get('poll-count') == '0'
+
+
+@pytest.mark.asyncio
+async def test_api_slow_supplies_content_location(api: SessionClient):
+
+    async with api.get("/slow?complete_in=0.01&final_status=418") as r:
+
+        assert r.headers.get('Content-Type') == 'application/json'
+        poll_location = r.headers.get('Content-Location')
+        poll_count = r.cookies.get('poll-count')
+        assert r.status == 202
+
+    async with api.get(poll_location, cookies={'poll-count', poll_count}) as r:
+        poll_count = r.cookies.get('poll-count')
+        assert poll_count == '1'
+        assert r.status == 418
