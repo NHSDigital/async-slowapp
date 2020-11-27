@@ -9,6 +9,7 @@ function setup(options) {
     log.setLevel(options.LOG_LEVEL || "info");
     app.locals.tracked = {};
     app.locals.base_uri = options.BASE_URI || `http://localhost:${process.env.PORT}`;
+    app.locals.version_info = JSON.parse(options.VERSION_INFO || '{}')
 }
 
 function start(options) {
