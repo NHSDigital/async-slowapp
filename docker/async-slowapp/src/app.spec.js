@@ -38,7 +38,7 @@ describe("express with async-slowapp", function () {
     it("responds to /_ping", (done) => {
         request(server)
             .get("/_ping")
-            .expect(200, {ping: "pong", service: "async-slowapp", release_info: {}})
+            .expect(200, {ping: "pong", service: "async-slowapp", _version: {}})
             .expect("Content-Type", /json/, done);
     });
 
@@ -118,7 +118,7 @@ describe("express with async-slowapp with /sub", function () {
         app.setup({
             LOG_LEVEL: (process.env.NODE_ENV === "test" ? "warn": "debug"),
             BASE_URI:"https://fakehost.com/sub",
-            RELEASE_INFO: "{\"test\": 123}"
+            VERSION_INFO: "{\"test\": 123}"
         });
         server = app.start({PORT: 9002});
     });
@@ -137,7 +137,7 @@ describe("express with async-slowapp with /sub", function () {
     it("responds to /sub/_ping", (done) => {
         request(server)
             .get("/sub/_ping")
-            .expect(200, {ping: "pong", service: "async-slowapp", release_info: {test: 123}})
+            .expect(200, {ping: "pong", service: "async-slowapp", _version: {test: 123}})
             .expect("Content-Type", /json/, done);
     });
 

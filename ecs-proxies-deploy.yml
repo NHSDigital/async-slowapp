@@ -13,8 +13,8 @@ docker_service:
         value: "https://{{ APIGEE_HOSTNAME }}/{{ SERVICE_BASE_PATH }}"
       - name: LOG_LEVEL
         value: "{{ 'debug' if APIGEE_ENVIRONMENT == 'internal-dev' else 'info' }}"
-      - name: RELEASE_INFO
-        value: "{{ release_info | to_json | to_json }}"
+      - name: VERSION_INFO
+        value: "{{ version_info | to_json }}"
     health_check:
       matcher: "200"
       path: "/_ping"
