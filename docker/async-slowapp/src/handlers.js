@@ -237,7 +237,7 @@ async function ping(req, res) {
     res.json({
         ping: "pong",
         service: "async-slowapp",
-        release_info: req.app.locals.release_info
+        _version: req.app.locals.version_info
     });
 }
 
