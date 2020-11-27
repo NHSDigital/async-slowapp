@@ -1,3 +1,6 @@
+import asyncio
+from asyncio import CancelledError
+
 import pytest
 from helpers import SessionClient, TestSessionConfig
 
@@ -20,9 +23,92 @@ async def test_postman_echo_send_multivalue_headers():
 
 
 @pytest.mark.asyncio
-async def test_api_status(api: SessionClient):
+async def test_wait_for_ping(api: SessionClient, test_config: TestSessionConfig):
 
-    async with api.get("_status") as r:
+    responses = []
+    
+    async def wait_for_release(sleep: int = 2):
+
+        while True:
+
+            try:
+
+                async with api.get("_ping") as r:
+
+                    if r.status != 200:
+                        responses.append((r.status, r.headers, await r.text()))
+                        await asyncio.sleep(sleep)
+                        continue
+
+                    body = await r.json()
+
+                    if (
+                        body["version"] != test_config.version
+                        or body["releaseId"] != test_config.release_id
+                    ):
+                        responses.append((r.status, r.headers, await r.text()))
+                        await asyncio.sleep(sleep)
+                        continue
+
+                    return
+
+            except CancelledError:
+                return
+
+    try:
+        await asyncio.wait_for(wait_for_release(), timeout=2)
+    except asyncio.TimeoutError as e:
+        if not responses:
+            raise e
+        status, headers, text = responses[-1]
+        raise TimeoutError(f"last status: {status}\nlast body:{text}\nlast headers:{headers}\nconfig:{test_config}")
+
+
+@pytest.mark.asyncio
+async def test_wait_for_status(api: SessionClient, test_config: TestSessionConfig):
+
+    responses = []
+
+    async def wait_for_release(sleep: int = 2):
+
+        while True:
+
+            try:
+
+                async with api.get("status") as r:
+
+                    if r.status != 200:
+                        responses.append((r.status, r.headers, await r.text()))
+                        await asyncio.sleep(sleep)
+                        continue
+
+                    body = await r.json()
+
+                    if (
+                            body["version"] != test_config.version
+                            or body["releaseId"] != test_config.release_id
+                    ):
+                        responses.append((r.status, r.headers, await r.text()))
+                        await asyncio.sleep(sleep)
+                        continue
+
+                    return
+
+            except CancelledError:
+                return
+
+    try:
+        await asyncio.wait_for(wait_for_release(), timeout=2)
+    except asyncio.TimeoutError as e:
+        if not responses:
+            raise e
+        status, headers, text = responses[-1]
+        raise TimeoutError(f"last status: {status}\nlast body:{text}\nlast headers:{headers}\nconfig:{test_config}")
+
+@pytest.mark.asyncio
+async def test_apistatus(api: SessionClient):
+
+    async with api.get("status") as r:
         assert r.status == 200
         body = await r.json()
 
@@ -30,19 +116,9 @@ async def test_api_status(api: SessionClient):
 
 
 @pytest.mark.asyncio
-async def test_app_ping(api: SessionClient, test_config: TestSessionConfig):
+async def test_apistatus_with_service_header(api: SessionClient):
 
-    async with api.get("_ping") as r:
-        assert r.status == 200
-        body = await r.json()
-
-        assert body["version"] == test_config.service_base_path
-
-
-@pytest.mark.asyncio
-async def test_api_status_with_service_header(api: SessionClient):
-
-    async with api.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
+    async with api.get("status", headers={'x-apim-service': 'sync-wrap'}) as r:
         assert r.status == 200
         body = await r.json()
 
@@ -76,7 +152,7 @@ async def test_api_slow_supplies_content_location(api: SessionClient, test_confi
 @pytest.mark.asyncio
 async def test_api_slow_supplies_content_location(api: SessionClient):
 
-    async with api.get("slow?complete_in=0.01&final_status=418") as r:
+    async with api.get("slow?complete_in=0.01&finalstatus=418") as r:
 
         assert 'application/json' in r.headers.get('Content-Type')
         poll_location = r.headers.get('Content-Location')
