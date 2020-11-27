@@ -1,3 +1,3 @@
 # async-slowapp
 
-synchronously wrapping asynchronous responses 
+To test synchronously wrapping asynchronous responses
