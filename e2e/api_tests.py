@@ -76,14 +76,13 @@ async def test_api_slow_supplies_content_location(api: SessionClient, test_confi
 @pytest.mark.asyncio
 async def test_api_slow_supplies_content_location(api: SessionClient):
 
-    async with api.get("/slow?complete_in=0.01&final_status=418") as r:
+    async with api.get("slow?complete_in=0.01&final_status=418") as r:
 
-        assert r.headers.get('Content-Type') == 'application/json'
+        assert 'application/json' in r.headers.get('Content-Type')
         poll_location = r.headers.get('Content-Location')
-        poll_count = r.cookies.get('poll-count')
         assert r.status == 202
 
-    async with api.get(poll_location, cookies={'poll-count', poll_count}) as r:
+    async with api.get(poll_location) as r:
         poll_count = r.cookies.get('poll-count')
-        assert poll_count == '1'
+        assert poll_count.value == '1'
         assert r.status == 418

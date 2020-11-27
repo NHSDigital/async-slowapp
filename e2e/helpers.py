@@ -21,7 +21,7 @@ class TestSessionConfig:
             object.__setattr__(self, "api_environment", os.environ.get('APIGEE_ENVIRONMENT', 'internal-dev'))
 
         if not self.service_base_path:
-            object.__setattr__(self, "service_base_path", os.environ.get('SERVICE_BASE_PATH', 'async-slowapp-pr-1'))
+            object.__setattr__(self, "service_base_path", os.environ.get('SERVICE_BASE_PATH', 'async-slowapp-pr-2'))
 
         apis_base = 'api.service.nhs.uk'
         api_host = apis_base if self.api_environment == 'prod' else f'{self.api_environment}.{apis_base}'
