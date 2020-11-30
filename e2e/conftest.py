@@ -1,18 +1,10 @@
+
 import pytest
-from helpers import SessionClient, TestSessionConfig
+from api_test_utils.api_test_session_config import APITestSessionConfig
+from api_test_utils.fixtures import api_client   # pylint: disable=unused-import
 
 
 @pytest.fixture(scope='session')
-def test_config() -> TestSessionConfig:
+def api_test_config() -> APITestSessionConfig:
 
-    return TestSessionConfig()
-
-
-@pytest.fixture(scope='function')
-async def api(test_config: TestSessionConfig):
-
-    session_client = SessionClient(test_config.base_uri)
-
-    yield session_client
-
-    await session_client.close()
+    return APITestSessionConfig()
