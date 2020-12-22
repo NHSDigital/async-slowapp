@@ -17,6 +17,7 @@ resources:
     - repository: common
       type: github
       name: NHSDigital/api-management-utils
+      ref: refs/heads/mm-apm-1351-aws-build-agents
       endpoint: NHSDigital
 
 variables:
@@ -28,12 +29,22 @@ extends:
     service_name: ${{ variables.service_name }}
     short_service_name: ${{ variables.short_service_name }}
     test_steps:
-      - bash: "make test-report"
+      - bash: |
+          set -e
+          make test-report
         displayName: run tests
         workingDirectory: "${{ variables.service_name }}"
+      - bash: |
+          if [ ! -f "reports/tests/async-slowapp.xml" ]; then
+            echo "no test results found"
+            exit -1
+          fi
+        workingDirectory: ${{ variables.service_name }}
+        displayName: 'check test results exist'
       - task: PublishTestResults@2
         inputs:
           testResultsFormat: "JUnit"
           testResultsFiles: "${{ variables.service_name }}/reports/tests/*.xml"
           failTaskOnFailedTests: true
         displayName: publish test report
+

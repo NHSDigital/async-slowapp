@@ -4,7 +4,7 @@ parameters:
 
 steps:
     - bash: |
-          make -C e2e install
+        make -C e2e install
       workingDirectory: $(SERVICE_DIR)
       displayName: Setup e2e tests
 
@@ -18,9 +18,18 @@ steps:
       workingDirectory: $(SERVICE_DIR)
       displayName: 'Run e2e Tests'
 
+    - bash: |
+        if [ ! -f "reports/e2e.xml" ]; then
+          echo "no test results found"
+          exit -1
+        fi
+      workingDirectory: $(SERVICE_DIR)
+      displayName: 'check test results exist'
+
     - task: PublishTestResults@2
       displayName: 'Publish e2e Test Results'
       inputs:
           testResultsFiles: |
               $(SERVICE_DIR)/reports/e2e.xml
           failTaskOnFailedTests: true
+
