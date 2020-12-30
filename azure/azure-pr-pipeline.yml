@@ -38,7 +38,7 @@ extends:
     apigee_deployments:
       - environment: internal-dev
         post_deploy:
-          - template: templates/tests.yml
+          - template: templates/e2e.yml
             parameters:
-              service_name: ${{ variables.service_name }}
+              test_type: e2e
 

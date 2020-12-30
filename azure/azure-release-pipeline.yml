@@ -35,6 +35,22 @@ extends:
     product_description: ${{ variables.product_description }}
     apigee_deployments:
       - environment: internal-dev
+        post_deploy:
+          - template: templates/e2e.yml
+            parameters:
+              test_type: smoketest
       - environment: internal-dev-sandbox
+        post_deploy:
+          - template: templates/e2e.yml
+            parameters:
+              test_type: smoketest
       - environment: internal-qa
+        post_deploy:
+          - template: templates/e2e.yml
+            parameters:
+              test_type: e2e
       - environment: internal-qa-sandbox
+        post_deploy:
+          - template: templates/e2e.yml
+            parameters:
+              test_type: smoketest
