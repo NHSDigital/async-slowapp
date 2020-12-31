@@ -19,7 +19,7 @@ async def test_wait_for_ping(api_client: APISessionClient, api_test_config: APIT
     await poll_until(
         make_request=lambda: api_client.get('_ping'),
         until=_is_complete,
-        timeout=60
+        timeout=120
     )
 
 
@@ -41,7 +41,7 @@ async def test_wait_for_status(api_client: APISessionClient, api_test_config: AP
     await poll_until(
         make_request=lambda: api_client.get('_status'),
         until=_is_complete,
-        timeout=60
+        timeout=120
     )
 
 
@@ -50,7 +50,7 @@ async def test_wait_for_status(api_client: APISessionClient, api_test_config: AP
 async def test_api_status_with_service_header_another_service(api_client: APISessionClient):
 
     async with api_client.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
-        assert r.status == 200
+        assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
         body = await r.json()
 
         assert body.get("service") == 'async-slowapp'
@@ -61,7 +61,7 @@ async def test_api_status_with_service_header_another_service(api_client: APISes
 async def test_api_status_with_service_header(api_client: APISessionClient):
 
     async with api_client.get("_status", headers={'x-apim-service': 'async-slowapp'}) as r:
-        assert r.status == 200
+        assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
         body = await r.json()
 
         assert body.get("service") == 'async-slowapp'
@@ -71,21 +71,21 @@ async def test_api_status_with_service_header(api_client: APISessionClient):
 async def test_api_poll_with_missing_id(api_client: APISessionClient):
 
     async with api_client.get("poll?id=madeup") as r:
-        assert r.status == 404
+        assert r.status == 404, (r.status, r.reason, (await r.text())[:2000])
 
 
 @pytest.mark.asyncio
 async def test_api_delete_poll_with_missing_id(api_client: APISessionClient):
 
     async with api_client.delete("poll?id=madeup") as r:
-        assert r.status == 404
+        assert r.status == 404, (r.status, r.reason, (await r.text())[:2000])
 
 
 @pytest.mark.asyncio
 async def test_api_slow_supplies_content_location(api_client: APISessionClient, api_test_config: APITestSessionConfig):
 
     async with api_client.get("slow") as r:
-        assert r.status == 202
+        assert r.status == 202, (r.status, r.reason, (await r.text())[:2000])
         assert r.headers.get('Content-Type') == 'application/json'
         assert r.headers.get('Content-Location').startswith(api_test_config.base_uri + '/poll?')
         assert r.cookies.get('poll-count') == '0'
@@ -98,9 +98,9 @@ async def test_api_slow_supplies_content_location(api_client: APISessionClient):
 
         assert 'application/json' in r.headers.get('Content-Type')
         poll_location = r.headers.get('Content-Location')
-        assert r.status == 202
+        assert r.status == 202, (r.status, r.reason, (await r.text())[:2000])
 
     async with api_client.get(poll_location) as r:
         poll_count = r.cookies.get('poll-count')
         assert poll_count.value == '1'
-        assert r.status == 418
+        assert r.status == 418, (r.status, r.reason, (await r.text())[:2000])
