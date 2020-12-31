@@ -8,7 +8,7 @@ resources:
     - repository: common
       type: github
       name: NHSDigital/api-management-utils
-      ref: refs/heads/mm-apm-1351-aws-build-agents
+      ref: refs/heads/edge
       endpoint: NHSDigital
 
   pipelines:
@@ -38,7 +38,7 @@ extends:
     apigee_deployments:
       - environment: internal-dev
         post_deploy:
-          - template: templates/tests.yml
+          - template: templates/e2e.yml
             parameters:
-              service_name: ${{ variables.service_name }}
+              test_type: e2e
 

@@ -5,6 +5,7 @@ from api_test_utils.api_session_client import APISessionClient
 from api_test_utils.api_test_session_config import APITestSessionConfig
 
 
+@pytest.mark.smoketest
 @pytest.mark.asyncio
 async def test_wait_for_ping(api_client: APISessionClient, api_test_config: APITestSessionConfig):
 
@@ -22,6 +23,7 @@ async def test_wait_for_ping(api_client: APISessionClient, api_test_config: APIT
     )
 
 
+@pytest.mark.smoketest
 @pytest.mark.asyncio
 async def test_wait_for_status(api_client: APISessionClient, api_test_config: APITestSessionConfig):
 
@@ -43,20 +45,22 @@ async def test_wait_for_status(api_client: APISessionClient, api_test_config: AP
     )
 
 
+@pytest.mark.smoketest
 @pytest.mark.asyncio
-async def test_apistatus_with_alt_service_header(api_client: APISessionClient):
+async def test_api_status_with_service_header_another_service(api_client: APISessionClient):
 
     async with api_client.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
         assert r.status == 200
         body = await r.json()
 
-        assert body == dict(ping='pong', service='async-slowapp')
+        assert body.get("service") == 'async-slowapp'
 
 
+@pytest.mark.smoketest
 @pytest.mark.asyncio
-async def test_apistatus_with_alt_service_header(api_client: APISessionClient):
+async def test_api_status_with_service_header(api_client: APISessionClient):
 
-    async with api_client.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
+    async with api_client.get("_status", headers={'x-apim-service': 'async-slowapp'}) as r:
         assert r.status == 200
         body = await r.json()
 
