@@ -65,10 +65,9 @@ dist: clean-dist build
 	mkdir -p dist/proxies
 	cp -R build/. dist/proxies
 	cp -R e2e/. dist/e2e
-#	cp -R utils dist
-#	rm -rf dist/utils/.git
-	cp ecs-proxies-deploy.yml dist/ecs-deploy-internal-dev.yml
-	cp ecs-proxies-deploy.yml dist/ecs-deploy-internal-qa.yml
+	for env in internal-dev internal-dev-sandbox internal-qa internal-qa-sandbox; do \
+   		cp ecs-proxies-deploy.yml dist/ecs-deploy-$$env.yml; \
+	done
 
 
 test: clean-reports
