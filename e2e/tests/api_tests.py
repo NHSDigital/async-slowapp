@@ -49,22 +49,22 @@ async def test_wait_for_status(api_client: APISessionClient, api_test_config: AP
 @pytest.mark.asyncio
 async def test_api_status_with_service_header_another_service(api_client: APISessionClient):
 
-    async with api_client.get("_status", headers={'x-apim-service': 'sync-wrap'}) as r:
-        assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
-        body = await r.json()
+    r = await api_client.get("_status", allow_retries=True, max_retries=5, headers={'x-apim-service': 'sync-wrap'})
+    assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
+    body = await r.json()
 
-        assert body.get("service") == 'async-slowapp'
+    assert body.get("service") == 'async-slowapp'
 
 
 @pytest.mark.smoketest
 @pytest.mark.asyncio
 async def test_api_status_with_service_header(api_client: APISessionClient):
 
-    async with api_client.get("_status", headers={'x-apim-service': 'async-slowapp'}) as r:
-        assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
-        body = await r.json()
+    r = await api_client.get("_status", allow_retries=True, max_retries=5, headers={'x-apim-service': 'async-slowapp'})
+    assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
+    body = await r.json()
 
-        assert body.get("service") == 'async-slowapp'
+    assert body.get("service") == 'async-slowapp'
 
 
 @pytest.mark.asyncio
