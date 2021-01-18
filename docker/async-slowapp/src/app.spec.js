@@ -37,7 +37,8 @@ describe("express with async-slowapp", function () {
 
     it("responds to /_ping", (done) => {
         request(server)
-            .get("/_ping")
+            .get("/_ping?log=yes")
+            .set("x-correlation-id", "bob")
             .expect(200, {ping: "pong", service: "async-slowapp", _version: {}})
             .expect("Content-Type", /json/, done);
     });
@@ -86,13 +87,19 @@ describe("express with async-slowapp", function () {
                 assert.equal(poll_count, 0);
             })
             .expect(202)
-            .end(async ()=>{
+            .end(async (err)=>{
+                if (err) {
+                    return done(err);
+                }
                 await sleep(500);
                 let url = new URL(content_location);
                 request(server)
                 .get(url.pathname + url.search)
                 .set("Cookie", "poll-count=0")
                 .expect(res => {
+                    if (err) {
+                        return done(err);
+                    }
                     let headers = res.res.rawHeaders.asMultiValue();
                     assert.isFalse(headers.has('content-location'));
                     let cookies = headers.cookies("set-cookie");
@@ -185,7 +192,10 @@ describe("express with async-slowapp with /sub", function () {
                 assert.equal(poll_count, 0);
             })
             .expect(202)
-            .end(async ()=>{
+            .end(async (err)=>{
+                if (err) {
+                    return done(err);
+                }
                 await sleep(500);
                 let url = new URL(content_location);
                 request(server)
@@ -209,7 +219,10 @@ describe("express with async-slowapp with /sub", function () {
         request(server)
             .get("/sub/slow?complete_in=0.3&final_status=418")
             .expect("Content-Type", /json/)
-            .expect(res => {
+            .expect((res, err) => {
+                if (err) {
+                    return done(err);
+                }
                 let headers = res.res.rawHeaders.asMultiValue();
                 assert.isTrue(headers.has('content-location'));
                 content_location = headers['content-location'];
@@ -218,7 +231,10 @@ describe("express with async-slowapp with /sub", function () {
                 let poll_count = parseInt(cookies["poll-count"].split(";")[0].split("=")[1]);
                 assert.equal(poll_count, 0);
             })
-            .end(async ()=>{
+            .end(async (err) => {
+                if (err) {
+                    return done(err);
+                }
                 let url = new URL(content_location);
                 request(server)
                     .get(url.pathname + url.search)

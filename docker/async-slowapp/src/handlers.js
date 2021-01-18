@@ -47,21 +47,6 @@ Object.defineProperty(Array.prototype, "asMultiValue", {
     }
 );
 
-Object.defineProperty(Array.prototype, "printableHeaders", {
-        enumerable: false,
-        configurable: true,
-        value: function() {
-            let lines = [];
-            this.forEach((val, index, arr) => {
-                if (index % 2 === 0) return;
-                let key = arr[index - 1];
-                lines.push(`${key}: ${val}`);
-            });
-            return "\n" + lines.join("\n");
-        }
-    }
-);
-
 Object.defineProperty(Array.prototype, "parseCookies", {
         enumerable: false,
         configurable: true,
@@ -212,40 +197,27 @@ const sleep = (delay) => {
     });
 };
 
-function lazy_debug(...msg_or_func) {
-    if (log.getLevel()>1) {
-        return
-    }
-    let msgs = msg_or_func.map(x=> {return typeof x === "function"? x() : x });
-    log.debug(...msgs, "\n");
-}
-
-function respond(req, res, status, headers=undefined) {
-
+function respond(req, res, next, status, headers=undefined) {
     res.status(status);
     if (headers!==undefined) {
-        lazy_debug("response", status, req.method, req.url, () => headers.printableHeaders());
         res.set(headers);
     }
-    else {
-        lazy_debug("response", status, req.method, req.url);
-    }
     res.end()
+    next()
 }
 
-async function ping(req, res) {
+async function ping(req, res, next) {
+
     res.json({
         ping: "pong",
         service: "async-slowapp",
         _version: req.app.locals.version_info
     });
+    next();
 }
 
-async function slow(req, res) {
-
-    log.info("slow", req.url, "\n");
-    lazy_debug("slow", req.method, req.url, ()=> req.rawHeaders.printableHeaders());
-
+async function slow(req, res, next) {
+    // X-Correlation-ID
     let locals = req.app.locals;
 
     let delay = req.query.delay;
@@ -272,33 +244,27 @@ async function slow(req, res) {
     ]);
     headers.withNewCookies({"poll-count": "poll-count=0"});
 
-    respond(req, res, 202, headers);
+    respond(req, res, next, 202, headers);
 
 }
 
-async function delete_poll(req, res) {
-
-    log.info("delete_poll", req.url, "\n");
-    lazy_debug("delete_poll", req.method, req.url, ()=> req.rawHeaders.printableHeaders());
+async function delete_poll(req, res, next) {
 
     let poll_id = req.query.id;
     let locals = req.app.locals;
 
     if (!(poll_id in locals.tracked)) {
-        respond(req, res, 404);
+        respond(req, res, next, 404);
         return;
     }
 
     delete locals.tracked[poll_id];
 
-    respond(req, res, 200);
+    respond(req, res, next, 200);
 }
 
 
-async function poll(req, res) {
-
-    log.info("poll", req.url, "\n");
-    lazy_debug("poll", req.method, req.url, ()=> req.rawHeaders.printableHeaders());
+async function poll(req, res, next) {
 
     let poll_id = req.query.id;
     let headers = req.rawHeaders.asMultiValue();
@@ -312,14 +278,14 @@ async function poll(req, res) {
     }
 
     if (!(poll_id in locals.tracked)) {
-        respond(req, res, 404);
+        respond(req, res, next, 404);
         return;
     }
 
     let tracking = locals.tracked[poll_id];
 
     if (new Date() < tracking.finish_at) {
-        respond(req, res, 202, new MultiValueHeaders(['Content-Location', `${locals.base_uri}/poll?id=${poll_id}`]));
+        respond(req, res, next, 202, new MultiValueHeaders(['Content-Location', `${locals.base_uri}/poll?id=${poll_id}`]));
         return;
     }
 
@@ -331,7 +297,7 @@ async function poll(req, res) {
 
     delete locals.tracked[poll_id];
 
-    respond(req, res, tracking.final_status, resp_headers);
+    respond(req, res, next, tracking.final_status, resp_headers);
 }
 
 module.exports = {
