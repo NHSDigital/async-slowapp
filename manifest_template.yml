@@ -1,0 +1,26 @@
+## Manifest template ##
+# To view the expanded version of this template locally, clone api-management-utils
+#
+#   $ cd /path/to/local/api-management-utils/ansible
+#   $ DIST_DIR=/path/to/this/repo make template-manifest
+#
+#
+APIGEE_ENVIRONMENTS:
+- name: internal-dev
+- name: internal-dev-sandbox
+- name: internal-qa
+- name: internal-qa-sandbox
+---
+meta:
+  api:
+    name: async-slowapp
+    guid: f61f73c1-2c9f-4f0c-b047-ab1464f867fc
+  schema_version: 1
+apigee:
+  environments:
+{% for ENV in APIGEE_ENVIRONMENTS %}
+  - name: {{ ENV.name }}
+    products: []
+    specs: []
+    api_catalog: []
+{% endfor %}
