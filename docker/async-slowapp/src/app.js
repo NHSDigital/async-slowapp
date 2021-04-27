@@ -120,7 +120,7 @@ const handlers = require("./handlers");
 app.use(before_request);
 app.get("/_ping", handlers.ping);
 app.get("/_status", handlers.ping);
-app.get("/slow", handlers.slow);
+app.all("/slow", handlers.slow);
 app.delete("/poll", handlers.delete_poll);
 app.get("/poll", handlers.poll);
 app.get("/sub/_ping", handlers.ping);
