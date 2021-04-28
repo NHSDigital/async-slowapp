@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RaiseFault async="false" continueOnError="false" enabled="true" name="RaiseFault.401Unauthorized">
+    <DisplayName>RaiseFault.401Unauthorized</DisplayName>
+    <Properties/>
+    <FaultResponse>
+        <Set>
+            <Headers/>
+            <Payload contentType="text/plain"/>
+            <StatusCode>401</StatusCode>
+            <ReasonPhrase>Access Denied</ReasonPhrase>
+        </Set>
+        <AssignVariable>
+            <Name>sw.error.code</Name>
+            <Value>forbidden</Value>
+        </AssignVariable>
+        <AssignVariable>
+            <Name>sw.error.diagnostics</Name>
+            <Value>Invalid Api Key</Value>
+        </AssignVariable>
+    </FaultResponse>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+</RaiseFault>

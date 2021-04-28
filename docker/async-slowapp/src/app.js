@@ -79,8 +79,8 @@ function after_request(req, res, next) {
     };
     if (log.getLevel()<2) {
         // debug
-        log_entry["req"]["headers"] = (req.rawHeaders || []).asMultiValue()
-        log_entry["res"]["headers"] = (res.rawHeaders || []).asMultiValue()
+        log_entry["req"]["headers"] = (req.rawHeaders || []).asMultiValue();
+        log_entry["res"]["headers"] = res.getHeaders();
     }
     log.info(JSON.stringify(log_entry));
 

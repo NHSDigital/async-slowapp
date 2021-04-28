@@ -39,7 +39,7 @@ describe("express with async-slowapp", function () {
         request(server)
             .get("/_ping?log=yes")
             .set("x-correlation-id", "bob")
-            .expect(200, {ping: "pong", service: "async-slowapp", _version: {}})
+            .expect(200, {ping: "pong", service: "async-slowapp", version: {}})
             .expect("Content-Type", /json/, done);
     });
 
@@ -184,7 +184,7 @@ describe("express with async-slowapp with /sub", function () {
     it("responds to /sub/_ping", (done) => {
         request(server)
             .get("/sub/_ping")
-            .expect(200, {ping: "pong", service: "async-slowapp", _version: {test: 123}})
+            .expect(200, {ping: "pong", service: "async-slowapp", version: {test: 123}})
             .expect("Content-Type", /json/, done);
     });
 
