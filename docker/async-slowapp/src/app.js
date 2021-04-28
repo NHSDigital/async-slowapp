@@ -79,8 +79,8 @@ function after_request(req, res, next) {
     };
     if (log.getLevel()<2) {
         // debug
-        log_entry["req"]["headers"] = (req.rawHeaders || []).asMultiValue()
-        log_entry["res"]["headers"] = (res.rawHeaders || []).asMultiValue()
+        log_entry["req"]["headers"] = (req.rawHeaders || []).asMultiValue();
+        log_entry["res"]["headers"] = res.getHeaders();
     }
     log.info(JSON.stringify(log_entry));
 
@@ -120,7 +120,7 @@ const handlers = require("./handlers");
 app.use(before_request);
 app.get("/_ping", handlers.ping);
 app.get("/_status", handlers.ping);
-app.get("/slow", handlers.slow);
+app.all("/slow", handlers.slow);
 app.delete("/poll", handlers.delete_poll);
 app.get("/poll", handlers.poll);
 app.get("/sub/_ping", handlers.ping);

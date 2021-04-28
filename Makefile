@@ -27,7 +27,10 @@ clean: clean-build clean-dist clean-reports
 	done; \
 	wait
 
-install:
+install-python:
+	poetry install
+
+install: install-python
 	@for dir in $(modules); do \
 		make --no-print-directory -C docker/$${dir} install & \
 	done; \
@@ -61,13 +64,12 @@ build: clean-build
 
 build-proxy: build
 
+_dist_include="pytest.ini poetry.lock poetry.toml pyproject.toml Makefile build/. e2e"
+
 dist: clean-dist build
-	mkdir -p dist/proxies
-	cp -R build/. dist/proxies
-	cp -R e2e/. dist/e2e
-	for env in internal-dev internal-dev-sandbox internal-qa internal-qa-sandbox; do \
-   		cp ecs-proxies-deploy.yml dist/ecs-deploy-$$env.yml; \
-	done
+	mkdir -p dist
+	for f in $(_dist_include); do cp -r $$f dist; done
+	cp ecs-proxies-deploy.yml dist/ecs-deploy-all.yml
 
 
 test: clean-reports

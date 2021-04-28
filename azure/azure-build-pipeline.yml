@@ -28,6 +28,21 @@ extends:
   parameters:
     service_name: ${{ variables.service_name }}
     short_service_name: ${{ variables.short_service_name }}
+    cache_steps:
+      - task: s3-cache-action@1
+        inputs:
+          key: 'node modules | docker/async-slowapp/package-lock.json'
+          location: 'docker/async-slowapp/node_modules'
+          debug: true
+          workingDirectory: '${{ variables.service_name }}'
+        displayName: cache async-slowapp node modules
+      - task: s3-cache-action@1
+        inputs:
+          key: 'poetry | ./poetry.lock'
+          location: '.venv'
+          debug: true
+          workingDirectory: '${{ variables.service_name }}'
+        displayName: cache python dependencies
     test_steps:
       - bash: |
           set -e

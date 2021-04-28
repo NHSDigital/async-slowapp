@@ -39,7 +39,7 @@ describe("express with async-slowapp", function () {
         request(server)
             .get("/_ping?log=yes")
             .set("x-correlation-id", "bob")
-            .expect(200, {ping: "pong", service: "async-slowapp", _version: {}})
+            .expect(200, {ping: "pong", service: "async-slowapp", version: {}})
             .expect("Content-Type", /json/, done);
     });
 
@@ -112,6 +112,46 @@ describe("express with async-slowapp", function () {
     });
 
 
+    it("responds to post /slow with a content-location and poll count increments", (done) => {
+        let content_location;
+        request(server)
+            .post("/slow?complete_in=0.01&final_status=418")
+            .send({test: "bob"})
+            .expect("Content-Type", /json/)
+            .expect(res => {
+                let headers = res.res.rawHeaders.asMultiValue();
+                assert.isTrue(headers.has('content-location'));
+                content_location = headers['content-location'];
+                let cookies = headers.cookies("set-cookie");
+                assert.isDefined(cookies["poll-count"]);
+                let poll_count = parseInt(cookies["poll-count"].split(";")[0].split("=")[1]);
+                assert.equal(poll_count, 0);
+            })
+            .expect(202)
+            .end(async (err)=>{
+                if (err) {
+                    return done(err);
+                }
+                await sleep(500);
+                let url = new URL(content_location);
+                request(server)
+                    .get(url.pathname + url.search)
+                    .set("Cookie", "poll-count=0")
+                    .expect(res => {
+                        if (err) {
+                            return done(err);
+                        }
+                        let headers = res.res.rawHeaders.asMultiValue();
+                        assert.isFalse(headers.has('content-location'));
+                        let cookies = headers.cookies("set-cookie");
+                        assert.isDefined(cookies["poll-count"]);
+                        let poll_count = parseInt(cookies["poll-count"].split(";")[0].split("=")[1]);
+                        assert.equal(poll_count, 1);
+                    })
+                    .expect(418, done)
+            });
+    });
+
 });
 
 
@@ -144,7 +184,7 @@ describe("express with async-slowapp with /sub", function () {
     it("responds to /sub/_ping", (done) => {
         request(server)
             .get("/sub/_ping")
-            .expect(200, {ping: "pong", service: "async-slowapp", _version: {test: 123}})
+            .expect(200, {ping: "pong", service: "async-slowapp", version: {test: 123}})
             .expect("Content-Type", /json/, done);
     });
 
