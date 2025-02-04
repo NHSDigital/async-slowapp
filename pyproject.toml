@@ -8,7 +8,7 @@ version = "0.0.1-alpha"
 description = "Sync Wrap"
 
 license = "MIT"
-
+package-mode = false
 authors = [
     "API management"
 ]
@@ -16,7 +16,7 @@ authors = [
 readme = 'README.md'
 
 repository = "https://github.com/NHSDigital/async-slowapp"
-homepage = ""
+homepage = "https://github.com/NHSDigital/async-slowapp"
 
 keywords = ["healthcare", "uk", "nhs"]
 
