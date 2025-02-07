@@ -8,7 +8,6 @@ version = "0.0.1-alpha"
 description = "Sync Wrap"
 
 license = "MIT"
-package-mode = false
 authors = [
     "API management"
 ]
