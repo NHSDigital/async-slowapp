@@ -11,7 +11,7 @@ clean:
 	rm -rf ./node_modules
 
 install:
-	npm install --dev
+	npm install --include=dev
 
 update:
 	npm update

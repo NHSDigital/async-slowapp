@@ -112,7 +112,7 @@ def calculate_version(base_major=1, base_minor=0, base_revision=0, base_pre="alp
     commits = list(without_empty(commits))
     patch = len(commits)
 
-    return "v" + str(semver.VersionInfo(major, minor, patch, pre))
+    return "v" + str(semver.Version(major, minor, patch, pre))
 
 
 if __name__ == "__main__":

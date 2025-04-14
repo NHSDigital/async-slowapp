@@ -1,12 +1,9 @@
-import asyncio
+from os import getenv
+from time import sleep
 from typing import List
 
 import pytest
-from aiohttp import ClientResponse
-from api_test_utils import poll_until
-from api_test_utils.api_session_client import APISessionClient
-from api_test_utils.api_test_session_config import APITestSessionConfig
-from api_test_utils import env
+import requests
 
 
 def dict_path(raw, path: List[str]):
@@ -25,147 +22,120 @@ def dict_path(raw, path: List[str]):
 
 @pytest.mark.e2e
 @pytest.mark.smoketest
-@pytest.mark.asyncio
-async def test_wait_for_ping(api_client: APISessionClient, api_test_config: APITestSessionConfig):
+def test_wait_for_ping(nhsd_apim_proxy_url):
+    retries = 0
+    resp = requests.get(f"{nhsd_apim_proxy_url}/_ping", timeout=30)
+    deployed_commit_id = resp.json().get("commitId")
 
-    async def _is_complete(resp: ClientResponse):
+    while deployed_commit_id != getenv("SOURCE_COMMIT_ID") and retries <= 30:
+        resp = requests.get(f"{nhsd_apim_proxy_url}/_ping", timeout=30)
 
-        if resp.status != 200:
-            return False
-        body = await resp.json()
-        return body.get("commitId") == api_test_config.commit_id
+        if resp.status_code != 200:
+            pytest.fail(f"Status code {resp.status_code}, expecting 200")
 
-    await poll_until(
-        make_request=lambda: api_client.get('_ping'),
-        until=_is_complete,
-        timeout=120
-    )
+        deployed_commit_id = resp.json().get("commitId")
+        retries += 1
+        sleep(1)
 
+    if retries >= 30:
+        pytest.fail("Timeout Error - max retries")
 
-@pytest.mark.e2e
-@pytest.mark.smoketest
-@pytest.mark.asyncio
-async def test_check_status_is_secured(api_client: APISessionClient):
-
-    async with api_client.get("_status", allow_retries=True) as resp:
-        assert resp.status == 401
+    assert deployed_commit_id == getenv("SOURCE_COMMIT_ID")
 
 
 @pytest.mark.e2e
 @pytest.mark.smoketest
-@pytest.mark.asyncio
-async def test_wait_for_status(
-        api_client: APISessionClient, api_test_config: APITestSessionConfig
-):
-    async def is_deployed(resp: ClientResponse):
-        if resp.status != 200:
-            return False
-        body = await resp.json()
-
-        if body.get("commitId") != api_test_config.commit_id:
-            return False
-
-        backend = dict_path(body, ["checks", "healthcheck", "outcome", "version"])
-
-        if type(backend) != dict:
-            return False
-
-        return backend.get("commitId") == api_test_config.commit_id
-
-    await poll_until(
-        make_request=lambda: api_client.get(
-            "_status", headers={"apikey": env.status_endpoint_api_key()}
-        ),
-        until=is_deployed,
-        timeout=120,
-    )
+def test_check_status_is_secured(nhsd_apim_proxy_url):
+    resp = requests.get(f"{nhsd_apim_proxy_url}/_status")
+    assert resp.status_code == 401
 
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_status_with_service_header_another_service(api_client: APISessionClient):
+@pytest.mark.smoketest
+@pytest.mark.parametrize("service_header", ["", "async-slowapp", "sync-wrap"])
+def test_wait_for_status(nhsd_apim_proxy_url, status_endpoint_auth_headers, service_header):
+    def _container_not_ready(resp: requests.Response):
+        """
+        Requests to ECS containers which are still starting up return with a
+        HTTP 503 (service unavailable).
+        """
+        return resp.json().get("checks", {}) \
+            .get("healthcheck", {}) \
+            .get("responseCode") == 503
 
-    r = await api_client.get(
-        "_status", allow_retries=True, max_retries=5,
-        headers={
-            'x-apim-service': 'async-slowapp',
-            'apikey': env.status_endpoint_api_key()
-        }
+    retries = 0
+    headers = status_endpoint_auth_headers
+    if service_header:
+        headers["x-apim-service"] = service_header
+    resp = requests.get(
+        f"{nhsd_apim_proxy_url}/_status", headers=headers, timeout=30
     )
-    assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
-    body = await r.json()
+
+    if resp.status_code != 200:
+        # Status should always be 200 we don't need to wait for it
+        pytest.fail(f"Status code {resp.status_code}, expecting 200")
+    if not resp.json().get("version"):
+        pytest.fail("version not found")
+
+    deployed_commit_id = resp.json().get("commitId")
+
+    while deployed_commit_id != getenv("SOURCE_COMMIT_ID") or _container_not_ready(resp) and retries <= 50:
+        resp = requests.get(
+            f"{nhsd_apim_proxy_url}/_status", headers=status_endpoint_auth_headers, timeout=30
+        )
+
+        deployed_commit_id = resp.json().get("commitId")
+        retries += 1
+        sleep(1)
+
+    if retries >= 45:
+        pytest.fail("Timeout Error - max retries")
+
+    body = resp.json()
+    assert body.get("status") == "pass"
 
     service = dict_path(body, ["checks", "healthcheck", "outcome", "service"])
-
     assert service == 'async-slowapp'
 
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_status_with_service_header(api_client: APISessionClient):
-
-    r = await api_client.get(
-        "_status", allow_retries=True, max_retries=5,
-        headers={
-            'x-apim-service': 'sync-wrap',
-            'apikey': env.status_endpoint_api_key()
-        }
-    )
-    assert r.status == 200, (r.status, r.reason, (await r.text())[:2000])
-    body = await r.json()
-
-    service = dict_path(body, ["checks", "healthcheck", "outcome", "service"])
-
-    assert service == 'async-slowapp'
+def test_api_poll_with_missing_id(nhsd_apim_proxy_url):
+    resp = requests.get(f"{nhsd_apim_proxy_url}/poll?id=madeup")
+    assert resp.status_code == 404, (resp.status_code, resp.reason, resp.text[:2000])
 
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_poll_with_missing_id(api_client: APISessionClient):
-
-    async with api_client.get("poll?id=madeup") as r:
-        assert r.status == 404, (r.status, r.reason, (await r.text())[:2000])
+def test_api_delete_poll_with_missing_id(nhsd_apim_proxy_url):
+    resp = requests.delete(f"{nhsd_apim_proxy_url}/poll?id=madeup")
+    assert resp.status_code == 404, (resp.status_code, resp.reason, resp.text[:2000])
 
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_delete_poll_with_missing_id(api_client: APISessionClient):
-
-    async with api_client.delete("poll?id=madeup") as r:
-        assert r.status == 404, (r.status, r.reason, (await r.text())[:2000])
-
-
-@pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_slow_supplies_content_location(api_client: APISessionClient, api_test_config: APITestSessionConfig):
-
-    async with api_client.get("slow") as r:
-        assert r.status == 202, (r.status, r.reason, (await r.text())[:2000])
-        assert r.headers.get('Content-Type') == 'application/json'
-        assert r.headers.get('Content-Location').startswith(api_test_config.base_uri + '/poll?')
-        assert r.cookies.get('poll-count') == '0'
+def test_api_slow_supplies_content_location(nhsd_apim_proxy_url):
+    resp = requests.get(f"{nhsd_apim_proxy_url}/slow")
+    assert resp.status_code == 202, (resp.status_code, resp.reason, resp.text[:2000])
+    assert 'application/json' in resp.headers.get('Content-Type')
+    assert resp.headers.get('Content-Location').startswith(nhsd_apim_proxy_url + '/poll?')
+    assert resp.cookies.get('poll-count') == '0'
 
 
 @pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_api_slow_supplies_content_location(api_client: APISessionClient):
+def test_api_slow_test_final_status(nhsd_apim_proxy_url):
+    resp = requests.get(f"{nhsd_apim_proxy_url}/slow?complete_in=0.1&final_status=418")
+    assert 'application/json' in resp.headers.get('Content-Type')
+    poll_location = resp.headers.get('Content-Location')
+    poll_count = resp.cookies.get('poll-count')
+    assert poll_count == '0'
+    assert resp.status_code == 202, (resp.status_code, resp.reason, resp.text[:2000])
 
-    async with api_client.get("slow?complete_in=0.1&final_status=418") as r:
+    resp = requests.get(poll_location, cookies={'poll-count': '0'})
+    poll_count = resp.cookies.get('poll-count')
+    assert poll_count == '1'
+    assert resp.status_code == 202, (resp.status_code, resp.reason, resp.text[:2000])
 
-        assert 'application/json' in r.headers.get('Content-Type')
-        poll_location = r.headers.get('Content-Location')
-        poll_count = r.cookies.get('poll-count')
-        assert poll_count.value == '0'
-        assert r.status == 202, (r.status, r.reason, (await r.text())[:2000])
+    sleep(0.5)
 
-    async with api_client.get(poll_location, cookies={'poll-count': '0'}) as r:
-        poll_count = r.cookies.get('poll-count')
-        assert poll_count.value == '1'
-        assert r.status == 202, (r.status, r.reason, (await r.text())[:2000])
-
-    await asyncio.sleep(0.1)
-
-    async with api_client.get(poll_location, cookies={'poll-count': '1'}) as r:
-        poll_count = r.cookies.get('poll-count')
-        assert poll_count.value == '2'
-        assert r.status == 418, (r.status, r.reason, (await r.text())[:2000])
+    resp = requests.get(poll_location, cookies={'poll-count': '1'})
+    poll_count = resp.cookies.get('poll-count')
+    assert poll_count == '2'
+    assert resp.status_code == 418, (resp.status_code, resp.reason, resp.text[:2000])

@@ -20,16 +20,20 @@ guard-%:
 install:
 	poetry install
 
+TEST_CMD := pytest \
+		--color=yes \
+		--api-name=async-slowapp \
+		--proxy-name=$(PROXY_NAME) \
 
 test:
-	$(activate) pytest
+	$(activate) $(TEST_CMD) -vs
 
 e2e:
 	rm -f ../reports/e2e.xml  > /dev/null || true
-	$(activate) coverage run --source ./ --module pytest -rxs -v --junit-xml=../reports/e2e.xml --ignore .venv || true
+	$(activate) coverage run --source ./ --module $(TEST_CMD) -rxs -v --junit-xml=../reports/e2e.xml --ignore .venv || true
 	@if [[ ! -f ../reports/e2e.xml ]]; then echo report not created; exit 1; fi
 
 smoketest:
 	rm -f ../reports/smoketest.xml  > /dev/null || true
-	$(activate) coverage run --source ./ --module pytest -m smoketest -rxs -v --junit-xml=../reports/smoketest.xml --ignore .venv || true
+	$(activate) coverage run --source ./ --module $(TEST_CMD) -m smoketest -rxs -v --junit-xml=../reports/smoketest.xml --ignore .venv || true
 	@if [[ ! -f ../reports/smoketest.xml ]]; then echo report not created; exit 1; fi
