@@ -11,6 +11,8 @@
 *.orig
 *.squashfs
 *.retry
+.envrc
+.env
 
 # node
 node_modules/
