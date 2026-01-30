@@ -58,3 +58,7 @@ reports/
 *.pyc
 .coverage
 __pycache__/
+
+# direnv
+.direnv
+.envrc*

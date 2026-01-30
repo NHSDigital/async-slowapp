@@ -19,7 +19,7 @@ keywords = ["healthcare", "uk", "nhs"]
 
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.13"
 semver = "^3.0.4"
 gitpython = "^3.1.44"
 requests = "^2.32.3"
