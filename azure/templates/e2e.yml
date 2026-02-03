@@ -1,7 +1,15 @@
 parameters:
   - name: test_type
 
+  - name: python_version
+    type: string
+    default: ''
+
 steps:
+    - task: UsePythonVersion@0
+      displayName: "Use Python ${{ parameters.python_version }}"
+      inputs:
+        versionSpec: ${{ parameters.python_version }}
 
     - task: s3-cache-action@1
       inputs:
