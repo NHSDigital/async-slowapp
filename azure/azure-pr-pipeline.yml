@@ -40,4 +40,5 @@ extends:
           - template: templates/e2e.yml
             parameters:
               test_type: e2e
+              python_version: ${{ variables.python_version }}
 

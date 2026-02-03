@@ -40,18 +40,22 @@ extends:
           - template: templates/e2e.yml
             parameters:
               test_type: smoketest
+              python_version: ${{ variables.python_version }}
       - environment: internal-dev-sandbox
         post_deploy:
           - template: templates/e2e.yml
             parameters:
               test_type: smoketest
+              python_version: ${{ variables.python_version }}
       - environment: internal-qa
         post_deploy:
           - template: templates/e2e.yml
             parameters:
               test_type: e2e
+              python_version: ${{ variables.python_version }}
       - environment: internal-qa-sandbox
         post_deploy:
           - template: templates/e2e.yml
             parameters:
               test_type: smoketest
+              python_version: ${{ variables.python_version }}
